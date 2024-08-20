@@ -9,7 +9,7 @@ def dns_detect(pkt):
             print(f"Time: {time.ctime()} | Spoofed IP: {pkt[DNSRR].rdata}")
 
 def main():
-    print("Starting real-time DNS spoof detection...")
+    print("Starting real-time DNS spoof detecter in 3...2...1...")
     sniff(filter="udp port 53", prn=dns_detect)
 
 if __name__ == "__main__":
