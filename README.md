@@ -1,5 +1,4 @@
 # DNSDEFENDER01
-DNSDEFENDER01
 
 **DNSDEFENDER01** is an ethical hacking project that helps learn how to simulate + detect DNS spoofing attacks. Includes both offensive and defensive components in a controlled environment using Python + the Scapy library.
 
