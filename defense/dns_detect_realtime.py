@@ -1,16 +1,19 @@
-from scapy.all import *
-import time
+import scapy.all as scapy
+import sys
 
-def dns_detect(pkt):
-    if pkt.haslayer(DNSRR):
-        # Check if response contains the spoofed IP address
-        if pkt[DNSRR].rdata == "5.5.5.5" and pkt[DNSRR].rrname == b"example.com.":
-            print(f"[ALERT] DNS spoofing detected for {pkt[DNSRR].rrname.decode()}!")
-            print(f"Time: {time.ctime()} | Spoofed IP: {pkt[DNSRR].rdata}")
+def detect_spoof(packet, real_ip, domain):
+    if packet.haslayer(scapy.DNSRR):
+        dns_resp = packet[scapy.DNSRR].rdata
+        if packet[scapy.DNSQR].qname.decode('utf-8') == domain:
+            if dns_resp != real_ip:
+                print(f"Spoofed DNS detected! {dns_resp} does not match {real_ip}")
 
-def main():
-    print("Starting real-time DNS spoof detecter in 3...2...1...")
-    sniff(filter="udp port 53", prn=dns_detect)
+if len(sys.argv) != 3:
+    print("Usage: python dns_detect_realtime.py <expected IP> <domain>")
+    sys.exit(1)
 
-if __name__ == "__main__":
-    main()
+expected_ip = sys.argv[1]
+target_domain = sys.argv[2]
+
+print(f"Monitoring DNS traffic for domain: {target_domain} and IP: {expected_ip}")
+scapy.sniff(filter="udp port 53", store=False, prn=lambda pkt: detect_spoof(pkt, expected_ip, target_domain))
