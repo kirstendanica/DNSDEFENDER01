@@ -12,5 +12,5 @@ def detect_spoof(packet):
             logging.info(f"Spoof detected: {response_ip} != {real_ip}")
             print(f"Potential DNS Spoofing Detected: {response_ip}")
 
-print("Starting DNS detection in 3...2...1")
+print("Starting DNS detection...")
 scapy.sniff(filter="udp port 53", store=False, prn=detect_spoof)

